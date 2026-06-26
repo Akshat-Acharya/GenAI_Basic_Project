@@ -1,6 +1,8 @@
 from fastapi import FastAPI, UploadFile
 from .utils.file import save_to_disk
 from .db.collections.files import files_collection, FileSchema
+from .queue.q import q
+from .queue.workers import process_file
 
 app = FastAPI()
 
@@ -24,6 +26,7 @@ async def upload_file(file: UploadFile):
     await save_to_disk(file=await file.read(), path=file_path)
 
     # Push to queue
+    q.enqueue(process_file, str(db_file.inserted_id))
 
     print("File ko queue mei push krdo....")
 
